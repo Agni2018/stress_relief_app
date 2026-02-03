@@ -206,12 +206,16 @@
         const result = await res.json();
 
         if (res.ok) {
-          showMessage(msg, result.message || 'Signup successful! You can now log in.', 'success');
-          setTimeout(() => {
-            signupForm.style.display = 'none';
-            loginForm.style.display = 'block';
-            formTitle.textContent = 'Login';
-          }, 1500);
+          showMessage(msg, result.message || 'Signup successful!', 'success');
+          if (result.redirect) {
+            setTimeout(() => (window.location.href = result.redirect), 1200);
+          } else {
+            setTimeout(() => {
+              signupForm.style.display = 'none';
+              loginForm.style.display = 'block';
+              formTitle.textContent = 'Login';
+            }, 1500);
+          }
         } else {
           showMessage(msg, result.message || 'User already exists.', 'error');
         }

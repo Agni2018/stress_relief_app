@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 
-const JWT_SECRET = 'your_jwt_secret_key_123'; // In a real app, use environment variables
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_123';
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
@@ -30,13 +30,31 @@ exports.signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await new Promise((resolve, reject) => {
-      User.create({ email, password: hashedPassword }, (err) => {
+      User.create({ email, password: hashedPassword }, (err, results) => {
         if (err) return reject(err);
-        resolve();
+        resolve(results);
       });
     });
 
-    res.status(201).json({ message: 'Signup successful! You can now log in.' });
+    // ✅ Auto-login after signup
+    User.findByEmail(email, (err, results) => {
+      if (err || results.length === 0) {
+        return res.status(201).json({ message: 'Signup successful! Please log in manually.' });
+      }
+
+      const user = results[0];
+      const token = jwt.sign(
+        { id: user.id, email: user.email, username: null },
+        JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+
+      res.cookie('token', token, COOKIE_OPTIONS);
+      res.status(201).json({
+        message: 'Signup successful!',
+        redirect: '/dashboard.html'
+      });
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error during signup' });
