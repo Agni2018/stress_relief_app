@@ -36,25 +36,7 @@ exports.signup = async (req, res) => {
       });
     });
 
-    // ✅ Auto-login after signup
-    User.findByEmail(email, (err, results) => {
-      if (err || results.length === 0) {
-        return res.status(201).json({ message: 'Signup successful! Please log in manually.' });
-      }
-
-      const user = results[0];
-      const token = jwt.sign(
-        { id: user.id, email: user.email, username: null },
-        JWT_SECRET,
-        { expiresIn: '1h' }
-      );
-
-      res.cookie('token', token, COOKIE_OPTIONS);
-      res.status(201).json({
-        message: 'Signup successful!',
-        redirect: '/dashboard.html'
-      });
-    });
+    res.status(201).json({ message: 'Signup successful! You can now log in.' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error during signup' });

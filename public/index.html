@@ -114,9 +114,15 @@
   </div>
 
   <script>
-    // ✅ Hide all messages on page show (handles back button)
-    window.addEventListener('pageshow', () => {
+    // ✅ Clear all forms and messages
+    function clearForms() {
+      document.querySelectorAll('input').forEach(input => input.value = '');
       document.querySelectorAll('.message').forEach(m => m.style.display = 'none');
+    }
+
+    // ✅ Reset everything on page show (handles back button and fresh load)
+    window.addEventListener('pageshow', () => {
+      clearForms();
     });
 
     // ---------- FORM TOGGLING ----------
@@ -128,6 +134,7 @@
 
     showSignup.addEventListener('click', (e) => {
       e.preventDefault();
+      clearForms();
       loginForm.style.display = 'none';
       signupForm.style.display = 'block';
       formTitle.textContent = 'Sign Up';
@@ -135,6 +142,7 @@
 
     showLogin.addEventListener('click', (e) => {
       e.preventDefault();
+      clearForms();
       signupForm.style.display = 'none';
       loginForm.style.display = 'block';
       formTitle.textContent = 'Login';
@@ -150,9 +158,15 @@
       modal.style.display = 'flex';
     });
 
-    closeBtn.addEventListener('click', () => (modal.style.display = 'none'));
+    closeBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+      clearForms();
+    });
     window.addEventListener('click', (e) => {
-      if (e.target === modal) modal.style.display = 'none';
+      if (e.target === modal) {
+        modal.style.display = 'none';
+        clearForms();
+      }
     });
 
     // ---------- MESSAGE HANDLER ----------
@@ -206,16 +220,13 @@
         const result = await res.json();
 
         if (res.ok) {
-          showMessage(msg, result.message || 'Signup successful!', 'success');
-          if (result.redirect) {
-            setTimeout(() => (window.location.href = result.redirect), 1200);
-          } else {
-            setTimeout(() => {
-              signupForm.style.display = 'none';
-              loginForm.style.display = 'block';
-              formTitle.textContent = 'Login';
-            }, 1500);
-          }
+          showMessage(msg, result.message || 'Signup successful! You can now log in.', 'success');
+          setTimeout(() => {
+            clearForms();
+            signupForm.style.display = 'none';
+            loginForm.style.display = 'block';
+            formTitle.textContent = 'Login';
+          }, 1500);
         } else {
           showMessage(msg, result.message || 'User already exists.', 'error');
         }
