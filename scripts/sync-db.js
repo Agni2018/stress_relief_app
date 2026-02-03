@@ -41,6 +41,10 @@ async function sync() {
         remoteConn = await mysql.createConnection(remoteConfig);
         console.log('✅ Remote Connected.');
 
+        // Disable foreign key checks for the sync process
+        console.log('🔗 Disabling foreign key checks on remote...');
+        await remoteConn.query('SET FOREIGN_KEY_CHECKS = 0');
+
         // Get tables
         const [tables] = await localConn.query('SHOW TABLES');
         const tableNames = tables.map(row => Object.values(row)[0]);
@@ -74,6 +78,10 @@ async function sync() {
 
             console.log(`✅ ${tableName} Synced.`);
         }
+
+        // Re-enable foreign key checks
+        console.log('\n🔗 Re-enabling foreign key checks on remote...');
+        await remoteConn.query('SET FOREIGN_KEY_CHECKS = 1');
 
         console.log('\n✨ Database sync completed successfully!');
 
