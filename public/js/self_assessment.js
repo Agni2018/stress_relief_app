@@ -90,17 +90,20 @@ restartBtn.addEventListener("click", () => {
 
 // ----------------- INITIAL LOAD -----------------
 async function checkSession() {
-  const res = await fetch("/api/auth/session");
-  const data = await res.json();
-  if (!data.loggedIn) {
+  try {
+    const res = await fetch("/api/auth/session", { cache: 'no-store' });
+    const data = await res.json();
+    if (!data.loggedIn) {
+      window.location.href = "/index.html";
+      return;
+    }
+  } catch (e) {
     window.location.href = "/index.html";
   }
 }
 
 window.addEventListener('pageshow', (event) => {
-  if (event.persisted) {
-    checkSession();
-  }
+  checkSession();
 });
 
 window.onload = () => {

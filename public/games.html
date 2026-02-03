@@ -203,9 +203,12 @@
     let userId = null;
     async function checkSession() {
       try {
-        const res = await fetch("/api/auth/session", { credentials: "include" });
+        const res = await fetch("/api/auth/session", { credentials: "include", cache: 'no-store' });
         const data = await res.json();
-        if (!data.loggedIn) window.location.href = "index.html";
+        if (!data.loggedIn) {
+          window.location.href = "index.html";
+          return;
+        }
         userId = data.user?.id;
         const name = data.user?.username || data.user?.email?.split('@')[0];
         document.getElementById("welcomeMessage").textContent = `🎮 Welcome, ${name}! Choose a Relaxing Game`;
@@ -214,18 +217,10 @@
         window.location.href = "index.html";
       }
     }
-    checkSession();
-
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-      window.location.href = "index.html";
-    });
 
     // ✅ Add listener to handle browser back/forward buttons
     window.addEventListener('pageshow', (event) => {
-      if (event.persisted) {
-        checkSession();
-      }
+      checkSession();
     });
 
     // ---------- Music ----------

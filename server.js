@@ -65,7 +65,7 @@ app.use("/api/mood", authenticateToken, moodRoutes); // ✅ protected
 
 
 // ✅ Protect dashboard and other pages
-app.get(['/dashboard.html', '/games.html', '/journal.html', '/relaxation.html', '/self-assessment.html'], authenticateToken, noCache, (req, res) => {
+app.get(['/dashboard.html', '/games.html', '/journal.html', '/relaxation.html', '/self-assessment.html', '/tips.html'], authenticateToken, noCache, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', req.path));
 });
 
@@ -84,6 +84,9 @@ app.get(['/', '/index.html'], (req, res, next) => {
 }, noCache, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// ✅ Apply noCache to session API
+app.get('/api/auth/session', noCache, authRoutes);
 
 // ✅ Serve static files (after protected routes)
 app.use(express.static(path.join(__dirname, 'public')));

@@ -23,20 +23,21 @@ let timerTimeout;
 // ---------------- SESSION CHECK ----------------
 async function checkSession() {
   try {
-    const res = await fetch("/api/auth/session");
+    const res = await fetch("/api/auth/session", { cache: 'no-store' });
     const data = await res.json();
-    if (!data.loggedIn) window.location.href = "/index.html";
+    if (!data.loggedIn) {
+      window.location.href = "/index.html";
+      return;
+    }
   } catch (e) {
-    console.warn("Session check skipped.");
+    window.location.href = "/index.html";
   }
 }
 checkSession();
 
 // ✅ Add listener to handle browser back/forward buttons
 window.addEventListener('pageshow', (event) => {
-  if (event.persisted) {
-    checkSession();
-  }
+  checkSession();
 });
 
 // ---------------- LOGOUT ----------------
