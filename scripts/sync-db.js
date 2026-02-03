@@ -11,11 +11,11 @@ const localConfig = {
 
 // Remote DB connection (from environment variables)
 const remoteConfig = {
-    host: process.env.MYSQLHOST || process.env.DB_HOST,
-    user: process.env.MYSQLUSER || process.env.DB_USER,
-    password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
-    database: process.env.MYSQLDATABASE || process.env.DB_NAME,
-    port: process.env.MYSQLPORT || process.env.DB_PORT || 3306,
+    host: (process.env.MYSQLHOST || process.env.DB_HOST || '').trim(),
+    user: (process.env.MYSQLUSER || process.env.DB_USER || '').trim(),
+    password: (process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '').trim(),
+    database: (process.env.MYSQLDATABASE || process.env.DB_NAME || '').trim(),
+    port: (process.env.MYSQLPORT || process.env.DB_PORT || 3306).toString().trim(),
     ssl: {
         rejectUnauthorized: false
     }
