@@ -25,7 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-const JWT_SECRET = 'your_jwt_secret_key_123';
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_123';
 
 // ✅ Middleware to verify JWT
 const authenticateToken = (req, res, next) => {
@@ -89,7 +89,7 @@ app.get(['/', '/index.html'], (req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ------------------ SERVER ------------------
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
 
 
