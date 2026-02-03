@@ -233,6 +233,11 @@
       }
     }
 
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/index.html';
+    });
+
     // ✅ Add listener to handle browser back/forward buttons
     window.addEventListener('pageshow', (event) => {
       checkSession();
