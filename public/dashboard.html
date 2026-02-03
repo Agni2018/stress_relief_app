@@ -238,10 +238,30 @@
       window.location.href = '/index.html';
     });
 
+    document.getElementById('saveUsernameBtn').addEventListener('click', async () => {
+      const username = document.getElementById('usernameInput').value.trim();
+      if (!username) return;
+
+      const res = await fetch('/api/auth/set-username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username }),
+      });
+
+      const result = await res.json();
+      if (result.username) {
+        document.getElementById('usernameModal').style.display = 'none';
+        document.getElementById('welcome').textContent = `Welcome, ${result.username}!`;
+      }
+    });
+
     // ✅ Add listener to handle browser back/forward buttons
     window.addEventListener('pageshow', (event) => {
       checkSession();
     });
+
+    // ✅ Initial check on load
+    checkSession();
   </script>
 </body>
 
