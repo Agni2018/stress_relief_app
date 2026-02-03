@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard | MindEase</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #a3c9f9, #f7d6e0);
+      color: #333;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 250px;
+      background: #2b3a55;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      border-top-right-radius: 20px;
+      border-bottom-right-radius: 20px;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 22px;
+      color: #ffd36b;
+    }
+
+    .sidebar a {
+      text-decoration: none;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .sidebar a:hover {
+      background: #ffd36b;
+      color: #2b3a55;
+    }
+
+    /* ===== MAIN ===== */
+    .main {
+      flex-grow: 1;
+      padding: 30px;
+      position: relative;
+    }
+
+    .logout {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      background: #ff5757;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .logout:hover {
+      background: #ff4040;
+    }
+
+    h1#welcome {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #2b3a55;
+    }
+
+    p.subtitle {
+      font-size: 16px;
+      color: #444;
+    }
+
+    /* ===== MODAL ===== */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .modal-content {
+      background: #fff;
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      width: 320px;
+      animation: popUp 0.4s ease;
+    }
+
+    @keyframes popUp {
+      from {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .modal-content h3 {
+      color: #2b3a55;
+      margin-bottom: 20px;
+    }
+
+    .modal-content input {
+      padding: 10px;
+      width: 80%;
+      border: 2px solid #a3c9f9;
+      border-radius: 10px;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    .modal-content input:focus {
+      border-color: #2b3a55;
+    }
+
+    .modal-content button {
+      padding: 10px 25px;
+      background: #2b3a55;
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .modal-content button:hover {
+      background: #ffd36b;
+      color: #2b3a55;
+    }
+
+    /* ===== FLOATING TIPS BUTTON ===== */
+    #tipsBtn {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: #ffd36b;
+      color: #2b3a55;
+      font-weight: bold;
+      border: none;
+      border-radius: 50px;
+      padding: 14px 24px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s, background 0.3s;
+      z-index: 1000;
+    }
+
+    #tipsBtn:hover {
+      background: #2b3a55;
+      color: #ffd36b;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h2>MindEase</h2>
+    <a href="relaxation.html">🧘‍♀️ Relaxation Techniques</a>
+    <a href="self-assessment.html">🧠 Stress Self-Assessment</a>
+    <a href="games.html">🎮 Gamified Activities</a>
+    <a href="journal.html">📓 Mood Journal</a>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <button class="logout" id="logoutBtn">Logout</button>
+    <h1 id="welcome"></h1>
+    <p class="subtitle">Track your progress, try relaxation games, and manage stress effectively 💆‍♀️</p>
+  </div>
+
+  <!-- MODAL -->
+  <div id="usernameModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h3>What would you like to be called?</h3>
+      <input type="text" id="usernameInput" placeholder="Enter your name" />
+      <button id="saveUsernameBtn">Save</button>
+    </div>
+  </div>
+
+  <!-- FLOATING TIPS BUTTON -->
+  <button id="tipsBtn" onclick="window.location.href='tips.html'">💡 Tips</button>
+
+  <script>
+    async function checkSession() {
+      const res = await fetch('/api/auth/session');
+      const data = await res.json();
+      if (!data.loggedIn) {
+        window.location.href = '/index.html';
+        return;
+      }
+
+      const user = data.user;
+      const welcome = document.getElementById('welcome');
+
+      if (user.username) {
+        welcome.textContent = `Welcome, ${user.username}!`;
+      } else {
+        document.getElementById('usernameModal').style.display = 'flex';
+      }
+
+      document.getElementById('saveUsernameBtn').addEventListener('click', async () => {
+        const username = document.getElementById('usernameInput').value.trim();
+        if (!username) return;
+
+        const res = await fetch('/api/auth/set-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        });
+
+        const result = await res.json();
+        if (result.username) {
+          document.getElementById('usernameModal').style.display = 'none';
+          welcome.textContent = `Welcome, ${result.username}!`;
+        }
+      });
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/index.html';
+    });
+
+    checkSession();
+
+    // ✅ Add listener to handle browser back/forward buttons
+    window.addEventListener('pageshow', (event) => {
+      // If the page was loaded from cache (e.g. back button), re-trigger checkSession
+      if (event.persisted) {
+        checkSession();
+      }
+    });
+  </script>
+</body>
+
+</html>

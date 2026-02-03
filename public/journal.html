@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mood Journal | MindEase</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #b7e4c7, #95d5b2);
+      color: #1b4332;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .journal-box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 500px;
+      margin-top: 20px;
+    }
+
+    select,
+    textarea,
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #40916c;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #1b4332;
+    }
+
+    .entries {
+      margin-top: 30px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .entry {
+      background: #e9f5ec;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .entry span {
+      font-weight: bold;
+      color: #2d6a4f;
+    }
+
+    #trackMoodBtn {
+      width: auto;
+      background: #2d6a4f;
+      margin-top: 20px;
+    }
+
+    #chartContainer {
+      margin-top: 30px;
+      width: 100%;
+      max-width: 500px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Mood Journal</h1>
+  <p>Log how you feel today and reflect on your mood journey.</p>
+
+  <div class="journal-box">
+    <label for="mood">Select your mood:</label>
+    <select id="mood">
+      <option value="">-- Choose Mood --</option>
+      <option>Happy</option>
+      <option>Neutral</option>
+      <option>Sad</option>
+      <option>Angry</option>
+      <option>Anxious</option>
+      <option>Relaxed</option>
+    </select>
+
+    <label for="note">Write about your day:</label>
+    <textarea id="note" rows="4" placeholder="What made you feel this way?"></textarea>
+
+    <button onclick="saveMood()">Save Entry</button>
+  </div>
+
+  <button id="trackMoodBtn" onclick="showMoodChart()">Track Mood</button>
+
+  <div id="chartContainer">
+    <canvas id="moodChart"></canvas>
+  </div>
+
+  <div class="entries" id="entries"></div>
+
+  <script>
+    async function saveMood() {
+      const mood = document.getElementById("mood").value;
+      const note = document.getElementById("note").value;
+
+      if (!mood) return alert("Please select your mood.");
+
+      const response = await fetch("/api/mood/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mood, note }),
+      });
+
+      const result = await response.json();
+      alert(result.message);
+      loadEntries();
+    }
+
+    async function loadEntries() {
+      const res = await fetch("/api/mood/get");
+      const entries = await res.json();
+
+      const container = document.getElementById("entries");
+      container.innerHTML = "<h2>Your Past Entries</h2>";
+
+      entries.forEach(e => {
+        container.innerHTML += `
+          <div class="entry">
+            <span>${new Date(e.entry_date).toLocaleString()}</span> - <strong>${e.mood}</strong><br>
+            ${e.note || ""}
+          </div>`;
+      });
+    }
+
+    async function showMoodChart() {
+      const res = await fetch("/api/mood/stats");
+      const data = await res.json();
+
+      const ctx = document.getElementById("moodChart");
+      const chartContainer = document.getElementById("chartContainer");
+      chartContainer.style.display = "block";
+
+      new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: Object.keys(data),
+          datasets: [{
+            data: Object.values(data),
+            backgroundColor: [
+              "#74c69d", "#95d5b2", "#d8f3dc", "#b7e4c7", "#52b788", "#40916c"
+            ],
+          }],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: "Your Mood Distribution",
+              font: { size: 18 }
+            }
+          }
+        }
+      });
+    }
+
+    async function checkSession() {
+      const res = await fetch('/api/auth/session');
+      const data = await res.json();
+      if (!data.loggedIn) {
+        window.location.href = '/index.html';
+      }
+    }
+
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) {
+        checkSession();
+      }
+    });
+
+    window.onload = () => {
+      checkSession();
+      loadEntries();
+    };
+  </script>
+</body>
+
+</html>

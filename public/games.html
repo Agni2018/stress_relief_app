@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relaxation Games | MindEase</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #d8f3dc, #b7e4c7, #95d5b2);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #2d6a4f;
+      text-align: center;
+    }
+
+    h2 {
+      color: #1b4332;
+      margin-bottom: 1rem;
+    }
+
+    .game-buttons button {
+      background: #52b788;
+      border: none;
+      color: white;
+      padding: 12px 25px;
+      margin: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1em;
+      transition: 0.3s;
+    }
+
+    .game-buttons button:hover {
+      background: #40916c;
+    }
+
+    #toggleMusic,
+    .logout-btn {
+      position: absolute;
+      top: 15px;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: white;
+      cursor: pointer;
+      font-size: 1em;
+    }
+
+    #toggleMusic {
+      right: 15px;
+      background: #74c69d;
+    }
+
+    .logout-btn {
+      left: 15px;
+      background: #40916c;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .modal-content {
+      background: #1b4332;
+      color: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 700px;
+      text-align: center;
+      position: relative;
+    }
+
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      cursor: pointer;
+      font-size: 24px;
+      color: #fff;
+    }
+
+    .scoreboard,
+    .timer,
+    .highscore {
+      margin: 10px 0;
+      color: #95d5b2;
+      font-weight: bold;
+    }
+
+    .result {
+      margin-top: 10px;
+      color: #b7e4c7;
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 70px);
+      grid-gap: 10px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
+    .card {
+      width: 70px;
+      height: 70px;
+      background: #2d6a4f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      border-radius: 10px;
+      cursor: pointer;
+      color: transparent;
+      transition: 0.3s;
+    }
+
+    .card.flipped {
+      background: #74c69d;
+      color: white;
+    }
+
+    canvas {
+      border-radius: 10px;
+      background: #2a2a2a;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
+  <button id="toggleMusic">🎵 Play Music</button>
+
+  <audio id="bgMusic" loop>
+    <source src="audio/calm_music.mp3.mp3" type="audio/mpeg" />
+  </audio>
+
+  <h2 id="welcomeMessage">🎮 Choose a Relaxing Game</h2>
+
+  <div class="game-buttons">
+    <button onclick="openGame('memory')">🧠 Emoji Memory Match</button>
+    <button onclick="openGame('bubblepop')">🫧 Bubble Pop</button>
+    <button onclick="openGame('clouds')">☁️ Catch the Clouds</button>
+  </div>
+
+  <!-- Memory Modal -->
+  <div id="memoryModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeGame('memory')">&times;</span>
+      <h3>🧠 Emoji Memory Match</h3>
+      <div class="scoreboard" id="memoryScore">Score: 0</div>
+      <div class="highscore" id="memoryHigh">High Score: 0</div>
+      <div class="timer" id="memoryTimer"></div>
+      <div id="memoryArea"></div>
+      <p class="result" id="memoryResult"></p>
+    </div>
+  </div>
+
+  <!-- Bubble Pop Modal -->
+  <div id="bubblepopModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeGame('bubblepop')">&times;</span>
+      <h3>🫧 Bubble Pop</h3>
+      <div class="scoreboard" id="bubblepopScore">Score: 0</div>
+      <div class="highscore" id="bubblepopHigh">High Score: 0</div>
+      <div class="timer" id="bubblepopTimer"></div>
+      <div id="bubblepopArea"></div>
+      <p class="result" id="bubblepopResult"></p>
+    </div>
+  </div>
+
+  <!-- Clouds Modal -->
+  <div id="cloudsModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeGame('clouds')">&times;</span>
+      <h3>☁️ Catch the Clouds</h3>
+      <div class="scoreboard" id="cloudsScore">Score: 0</div>
+      <div class="highscore" id="cloudsHigh">High Score: 0</div>
+      <div class="timer" id="cloudsTimer"></div>
+      <div id="cloudsArea"></div>
+      <p class="result" id="cloudsResult"></p>
+    </div>
+  </div>
+  <script>
+    // ---------- Session ----------
+    let userId = null;
+    async function checkSession() {
+      try {
+        const res = await fetch("/api/auth/session", { credentials: "include" });
+        const data = await res.json();
+        if (!data.loggedIn) window.location.href = "index.html";
+        userId = data.user?.id;
+        const name = data.user?.username || data.user?.email?.split('@')[0];
+        document.getElementById("welcomeMessage").textContent = `🎮 Welcome, ${name}! Choose a Relaxing Game`;
+        loadHighScores();
+      } catch {
+        window.location.href = "index.html";
+      }
+    }
+    checkSession();
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+      window.location.href = "index.html";
+    });
+
+    // ✅ Add listener to handle browser back/forward buttons
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) {
+        checkSession();
+      }
+    });
+
+    // ---------- Music ----------
+    const music = document.getElementById("bgMusic");
+    const toggle = document.getElementById("toggleMusic");
+    toggle.onclick = () => {
+      if (music.paused) { music.play(); toggle.textContent = "⏸ Pause Music"; }
+      else { music.pause(); toggle.textContent = "🎵 Play Music"; }
+    };
+
+    // ---------- Globals ----------
+    let scores = { memory: 0, bubblepop: 0, clouds: 0 };
+    let highs = { memory: 0, bubblepop: 0, clouds: 0 };
+    let active = {};
+    let timers = {};
+    let intervals = [];
+
+    async function loadHighScores() {
+      const res = await fetch("/api/games/get-scores", { credentials: "include" });
+      const data = await res.json();
+      highs = data || highs;
+      Object.keys(highs).forEach(g => {
+        if (document.getElementById(`${g}High`))
+          document.getElementById(`${g}High`).textContent = `High Score: ${highs[g]}`;
+      });
+    }
+
+    async function saveHighScore(game, score) {
+      if (score > (highs[game] || 0)) {
+        highs[game] = score;
+        document.getElementById(`${game}High`).textContent = `High Score: ${score}`;
+        await fetch("/api/games/save-score", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ gameName: game, score })
+        });
+      }
+    }
+
+    function openGame(name) {
+      const modal = document.getElementById(`${name}Modal`);
+      modal.style.display = "flex";
+      scores[name] = 0;
+      document.getElementById(`${name}Score`).textContent = `Score: 0`;
+      document.getElementById(`${name}Result`).textContent = "";
+      document.getElementById(`${name}Timer`).textContent = "";
+      active[name] = true;
+      if (name === "memory") startMemoryGame();
+      if (name === "bubblepop") startBubblePop();
+      if (name === "clouds") startClouds();
+    }
+
+    function closeGame(name) {
+      active[name] = false;
+      clearInterval(timers[name]);
+      intervals.forEach(clearInterval);
+      intervals = [];
+      document.getElementById(`${name}Modal`).style.display = "none";
+    }
+
+    function countdown(name, seconds, onTick, onEnd) {
+      let remain = seconds;
+      onTick(remain);
+      timers[name] = setInterval(() => {
+        remain--;
+        onTick(remain);
+        if (remain <= 0) {
+          clearInterval(timers[name]);
+          active[name] = false;
+          onEnd();
+        }
+      }, 1000);
+    }
+
+    // ---------- Memory Game ----------
+    function startMemoryGame() {
+      const emojis = ["🍎", "🍋", "🍓", "🍇", "🍉", "🍌", "🍍", "🥝"];
+      const pairs = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+      const area = document.getElementById("memoryArea");
+      area.innerHTML = `<div class="grid" id="memoryGrid"></div>`;
+      const grid = document.getElementById("memoryGrid");
+      pairs.forEach(e => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.textContent = e;
+        grid.appendChild(div);
+      });
+
+      let first = null, lock = false;
+      grid.onclick = e => {
+        if (!active.memory || lock || !e.target.classList.contains("card")) return;
+        const card = e.target;
+        if (card.classList.contains("flipped")) return;
+        card.classList.add("flipped");
+        if (!first) first = card;
+        else {
+          lock = true;
+          if (first.textContent === card.textContent) {
+            scores.memory += 10;
+            document.getElementById("memoryScore").textContent = `Score: ${scores.memory}`;
+            first = null; lock = false;
+          } else {
+            setTimeout(() => {
+              first.classList.remove("flipped");
+              card.classList.remove("flipped");
+              first = null; lock = false;
+            }, 700);
+          }
+        }
+      };
+
+      countdown("memory", 45,
+        r => document.getElementById("memoryTimer").textContent = `Time: ${r}s`,
+        async () => {
+          document.getElementById("memoryResult").textContent = `⏳ Time up! Final Score: ${scores.memory}`;
+          await saveHighScore("memory", scores.memory);
+        });
+    }
+
+    // ---------- Bubble Pop ----------
+    function startBubblePop() {
+      const area = document.getElementById("bubblepopArea");
+      const w = 480, h = 300;
+      area.innerHTML = `<canvas id="bubbleCanvas" width="${w}" height="${h}"></canvas>`;
+      const canvas = document.getElementById("bubbleCanvas");
+      const ctx = canvas.getContext("2d");
+      let bubbles = [];
+
+      canvas.onclick = e => {
+        if (!active.bubblepop) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left, y = e.clientY - rect.top;
+        bubbles = bubbles.filter(b => {
+          const hit = Math.hypot(b.x - x, b.y - y) < b.r;
+          if (hit) scores.bubblepop += 5;
+          return !hit;
+        });
+        document.getElementById("bubblepopScore").textContent = `Score: ${scores.bubblepop}`;
+      };
+
+      intervals.push(setInterval(() => {
+        if (active.bubblepop) bubbles.push({ x: Math.random() * w, y: h + 20, r: 10 + Math.random() * 15, v: 1 + Math.random() });
+      }, 700));
+
+      intervals.push(setInterval(() => {
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = "#a2d2ff";
+        bubbles.forEach(b => {
+          b.y -= b.v;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        bubbles = bubbles.filter(b => b.y > -30);
+      }, 50));
+
+      countdown("bubblepop", 30,
+        r => document.getElementById("bubblepopTimer").textContent = `Time: ${r}s`,
+        async () => {
+          document.getElementById("bubblepopResult").textContent = `⏳ Time up! Final Score: ${scores.bubblepop}`;
+          await saveHighScore("bubblepop", scores.bubblepop);
+        });
+    }
+
+    // ---------- Catch the Clouds ----------
+    function startClouds() {
+      const area = document.getElementById("cloudsArea");
+      const w = 480, h = 300;
+      area.innerHTML = `<canvas id="cloudCanvas" width="${w}" height="${h}"></canvas>`;
+      const canvas = document.getElementById("cloudCanvas");
+      const ctx = canvas.getContext("2d");
+      let clouds = [], basketX = w / 2 - 30;
+
+      window.onkeydown = e => {
+        if (!active.clouds) return;
+        if (e.key === "ArrowLeft") basketX = Math.max(0, basketX - 25);
+        if (e.key === "ArrowRight") basketX = Math.min(w - 60, basketX + 25);
+      };
+
+      intervals.push(setInterval(() => {
+        if (active.clouds) clouds.push({ x: Math.random() * (w - 40), y: -20, v: 1 + Math.random() * 2 });
+      }, 800));
+
+      intervals.push(setInterval(() => {
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = "#74c0fc"; ctx.fillRect(basketX, h - 40, 60, 15);
+        ctx.fillStyle = "white";
+        clouds.forEach((c, i) => {
+          ctx.beginPath(); ctx.arc(c.x, c.y, 15, 0, Math.PI * 2); ctx.fill();
+          c.y += c.v;
+          if (c.y > h - 40 && c.x > basketX && c.x < basketX + 60) {
+            clouds.splice(i, 1);
+            scores.clouds += 5;
+            document.getElementById("cloudsScore").textContent = `Score: ${scores.clouds}`;
+          }
+        });
+      }, 50));
+
+      countdown("clouds", 30,
+        r => document.getElementById("cloudsTimer").textContent = `Time: ${r}s`,
+        async () => {
+          document.getElementById("cloudsResult").textContent = `⏳ Time up! Final Score: ${scores.clouds}`;
+          await saveHighScore("clouds", scores.clouds);
+        });
+    }
+  </script>
+
+
+</body>
+
+</html>

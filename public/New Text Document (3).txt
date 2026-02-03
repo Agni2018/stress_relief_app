@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relaxation Games</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #d8f3dc, #b7e4c7, #95d5b2);
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #2d6a4f;
+      text-align: center;
+      overflow-x: hidden;
+    }
+
+    h2 {
+      margin-bottom: 1rem;
+      color: #1b4332;
+    }
+
+    .game-buttons button {
+      background: #52b788;
+      border: none;
+      color: white;
+      padding: 12px 25px;
+      margin: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1em;
+      transition: 0.3s ease;
+    }
+
+    .game-buttons button:hover {
+      background: #40916c;
+    }
+
+    #toggleMusic {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #74c69d;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: white;
+      cursor: pointer;
+      font-size: 1em;
+    }
+
+    #gameArea {
+      margin-top: 30px;
+      padding: 20px;
+      background: #ffffffb3;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+      min-height: 300px;
+      transition: all 0.5s ease;
+    }
+
+    canvas {
+      border-radius: 15px;
+    }
+
+    /* Catch Clouds game */
+    #cloudCanvas {
+      background: linear-gradient(#cfe0f5, #e6f0fa);
+    }
+
+    /* Rhythm circles */
+    .circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin: 20px auto;
+      background: #52b788;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.7; }
+    }
+
+    #resultMessage {
+      margin-top: 20px;
+      font-size: 1.2em;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+  </style>
+</head>
+<body>
+  <button id="toggleMusic">🎵 Play Music</button>
+  <audio id="bgMusic" loop>
+    <source src="assets/music/relax_theme.mp3" type="audio/mpeg" />
+  </audio>
+
+  <h2>🎮 Choose a Relaxing Game</h2>
+  <div class="game-buttons">
+    <button onclick="openGame('puzzle')">🧩 Calm Puzzle</button>
+    <button onclick="openGame('rhythm')">🎵 Rhythm Tap</button>
+    <button onclick="openGame('clouds')">☁️ Catch the Clouds</button>
+  </div>
+
+  <div id="gameArea"></div>
+
+  <script>
+    // Background music logic
+    const music = document.getElementById("bgMusic");
+    const btn = document.getElementById("toggleMusic");
+    btn.addEventListener("click", () => {
+      if (music.paused) {
+        music.play();
+        btn.textContent = "⏸ Pause Music";
+      } else {
+        music.pause();
+        btn.textContent = "🎵 Play Music";
+      }
+    });
+
+    function openGame(game) {
+      const gameArea = document.getElementById("gameArea");
+      gameArea.innerHTML = "";
+
+      if (game === "puzzle") loadPuzzleGame(gameArea);
+      else if (game === "rhythm") loadRhythmGame(gameArea);
+      else if (game === "clouds") loadCloudGame(gameArea);
+    }
+
+    // 🧩 Calm Puzzle
+    function loadPuzzleGame(container) {
+      container.innerHTML = "<h3>🧩 Calm Puzzle</h3><canvas id='puzzleCanvas' width='300' height='300'></canvas><p id='resultMessage'></p>";
+      const ctx = document.getElementById("puzzleCanvas").getContext("2d");
+      const img = new Image();
+      img.src = "assets/images/nature.jpg"; // peaceful image
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, 300, 300);
+        setTimeout(() => ctx.drawImage(img, 150, 150, 150, 150, 0, 0, 150, 150), 500);
+      };
+      setTimeout(() => showResult("Puzzle complete! 🌿"), 3000);
+    }
+
+    // 🎵 Rhythm Tap
+    function loadRhythmGame(container) {
+      container.innerHTML = "<h3>🎵 Rhythm Tap</h3><div class='circle' id='circle'></div><p>Tap the circle when it glows!</p><p id='resultMessage'></p>";
+      const circle = document.getElementById("circle");
+      let score = 0;
+      circle.addEventListener("click", () => {
+        score++;
+        showResult("Nice rhythm! 💫 Score: " + score);
+      });
+    }
+
+    // ☁️ Catch the Clouds
+    function loadCloudGame(container) {
+      container.innerHTML = "<h3>☁️ Catch the Clouds</h3><canvas id='cloudCanvas' width='400' height='300'></canvas><p id='resultMessage'></p>";
+      const canvas = document.getElementById("cloudCanvas");
+      const ctx = canvas.getContext("2d");
+      let basketX = 180, score = 0, clouds = [];
+
+      document.addEventListener("keydown", e => {
+        if (e.key === "ArrowLeft") basketX -= 20;
+        if (e.key === "ArrowRight") basketX += 20;
+      });
+
+      function createCloud() {
+        clouds.push({ x: Math.random() * 370, y: 0 });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#74c0fc";
+        ctx.fillRect(basketX, 260, 40, 20);
+
+        ctx.fillStyle = "#fff";
+        for (let c of clouds) {
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, 15, 0, Math.PI * 2);
+          ctx.fill();
+          c.y += 2;
+          if (c.y > 260 && c.x > basketX && c.x < basketX + 40) {
+            score++;
+            clouds.splice(clouds.indexOf(c), 1);
+            showResult("☁️ Nice catch! Score: " + score);
+          }
+        }
+      }
+
+      setInterval(createCloud, 1000);
+      setInterval(draw, 50);
+    }
+
+    function showResult(msg) {
+      const res = document.getElementById("resultMessage");
+      if (res) {
+        res.textContent = msg;
+        res.style.opacity = 1;
+        setTimeout(() => (res.style.opacity = 0), 1500);
+      }
+    }
+  </script>
+</body>
+</html>

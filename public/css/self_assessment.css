@@ -1,0 +1,108 @@
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(to bottom right, #b3e5fc, #f8bbd0);
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+}
+
+.top-bar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 30px;
+  backdrop-filter: blur(5px);
+}
+
+.top-bar h2 {
+  margin: 0;
+}
+
+.top-bar button {
+  background: #ff6666;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.container {
+  margin-top: 100px;
+  text-align: center;
+  width: 80%;
+  max-width: 600px;
+}
+
+#progressContainer {
+  width: 100%;
+  background: #e0f7fa;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 20px 0;
+  position: relative;
+}
+
+#progressBar {
+  width: 0%;
+  height: 10px;
+  background: #4fc3f7;
+  transition: width 0.4s ease;
+}
+
+#progressText {
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+
+.quiz-box {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  animation: fadeIn 0.5s ease;
+}
+
+.option {
+  display: block;
+  background: #f0f8ff;
+  border: 1px solid #90caf9;
+  border-radius: 8px;
+  margin: 10px 0;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.option:hover {
+  background: #e3f2fd;
+}
+
+.result {
+  text-align: center;
+  background: rgba(255,255,255,0.8);
+  padding: 20px;
+  border-radius: 12px;
+  animation: fadeIn 1s ease;
+}
+
+.hidden {
+  display: none;
+}
+
+.fade-in {
+  animation: fadeIn 1s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
