@@ -1,0 +1,31 @@
+services:
+
+  app:
+    build: .
+    container_name: stress-relief-container
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: stress_relief
+      DB_PORT: 3306
+      JWT_SECRET: your-secure-random-secret
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: stress-relief-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: stress_relief
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:
