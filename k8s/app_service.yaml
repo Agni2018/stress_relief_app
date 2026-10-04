@@ -6,11 +6,12 @@ metadata:
   namespace: stress-relief
 
 spec:
+  type: NodePort
+
   selector:
     app: stress-relief-app
 
   ports:
     - port: 3000
       targetPort: 3000
-
-  type: NodePort
+      nodePort: 30080
