@@ -6,7 +6,7 @@ metadata:
   namespace: stress-relief
 
 spec:
-  replicas: 1
+  replicas: 2
 
   selector:
     matchLabels:
@@ -20,9 +20,7 @@ spec:
     spec:
       containers:
         - name: stress-relief-app
-
           image: stress-relief-app:1.0
-
           imagePullPolicy: IfNotPresent
 
           ports:
@@ -66,4 +64,32 @@ spec:
                   key: DB_PASSWORD
 
             - name: JWT_SECRET
-              value: your-secure-random-secret
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: JWT_SECRET
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+
+            initialDelaySeconds: 30
+            periodSeconds: 20
